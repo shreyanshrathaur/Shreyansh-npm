@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+.shapewatch/
+*.tgz
+*.log
+.DS_Store
+npm.md
+npm2.md
