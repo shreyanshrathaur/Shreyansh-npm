@@ -1,6 +1,6 @@
 {
   "name": "@shreyanshrathaur/shapewatch",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Zero-dependency runtime API response shape drift detection",
   "type": "module",
   "main": "./dist/index.cjs",
