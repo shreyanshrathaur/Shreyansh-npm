@@ -118,6 +118,18 @@ export function compareObservation(
           lastSeen: now,
         });
         suppressedPrefixes.add(path);
+      } else if (stat.format && obs.type === 'string' && obs.format !== stat.format) {
+        drifts.push({
+          endpoint,
+          kind: 'FORMAT_CHANGED',
+          severity: 'warning',
+          path,
+          expected: `format:${stat.format}`,
+          actual: obs.format ? `format:${obs.format}` : 'raw-string',
+          count: 1,
+          firstSeen: now,
+          lastSeen: now,
+        });
       }
     }
   }

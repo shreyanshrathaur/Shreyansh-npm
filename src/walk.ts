@@ -2,6 +2,20 @@ export interface ObservedField {
   path: string;
   type: string;
   isNull: boolean;
+  format?: string;
+}
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const URI_REGEX = /^https?:\/\/[^\s$.?#].[^\s]*$/i;
+
+export function detectStringFormat(str: string): string | undefined {
+  if (UUID_REGEX.test(str)) return 'uuid';
+  if (ISO_DATE_REGEX.test(str)) return 'date-time';
+  if (EMAIL_REGEX.test(str)) return 'email';
+  if (URI_REGEX.test(str)) return 'uri';
+  return undefined;
 }
 
 export interface WalkOptions {
@@ -77,8 +91,10 @@ export function walkValue(
     const typeStr = getTypeString(current);
     const isNull = current === null;
 
+    const format = typeof current === 'string' ? detectStringFormat(current) : undefined;
+
     if (!results.has(path)) {
-      results.set(path, { path, type: typeStr, isNull });
+      results.set(path, { path, type: typeStr, isNull, format });
     }
 
     if (isNull || depth >= maxDepth) {

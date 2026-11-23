@@ -77,8 +77,11 @@ export class BaselineManager {
           allowedTypes: [],
           allowsNull: false,
           required: false,
+          format: obs.format,
         };
         baseline.fields[path] = stat;
+      } else if (obs.format && !stat.format) {
+        stat.format = obs.format;
       }
       stat.seen += 1;
       stat.eligible += 1;

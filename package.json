@@ -20,6 +20,26 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./generators": {
+      "import": {
+        "types": "./dist/generators.d.ts",
+        "default": "./dist/generators.js"
+      },
+      "require": {
+        "types": "./dist/generators.d.cts",
+        "default": "./dist/generators.cjs"
+      }
+    },
+    "./middleware": {
+      "import": {
+        "types": "./dist/adapters/middleware.d.ts",
+        "default": "./dist/adapters/middleware.js"
+      },
+      "require": {
+        "types": "./dist/adapters/middleware.d.cts",
+        "default": "./dist/adapters/middleware.cjs"
+      }
+    },
     "./storage/memory": {
       "import": {
         "types": "./dist/storage/memory.d.ts",

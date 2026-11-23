@@ -5,6 +5,8 @@ import { normalizeEndpoint } from './normalize.js';
 import { ShapewatchDriftError } from './errors.js';
 import { createFetchWrapper } from './adapters/fetch.js';
 import { createAxiosInterceptor } from './adapters/axios.js';
+import { generateTypeScriptTypes, generateJsonSchema } from './generators.js';
+import { sendWebhookNotification } from './alerts/webhook.js';
 import type {
   Drift,
   EndpointBaseline,
@@ -21,6 +23,9 @@ export * from './baseline.js';
 export * from './compare.js';
 export * from './reporter.js';
 export * from './normalize.js';
+export * from './generators.js';
+export * from './alerts/webhook.js';
+export * from './adapters/middleware.js';
 export * from './storage/memory.js';
 export * from './storage/file.js';
 export * from './storage/localstorage.js';
@@ -93,7 +98,13 @@ export function createShapewatch(options: ShapewatchOptions = {}): Shapewatch {
         storage.saveReport(reporter.getReport());
       }
 
-      for (const drift of recordedDrifts) {
+      const minConfirmations = options.minDriftConfirmations ?? 1;
+      const eligibleDrifts = recordedDrifts.filter((d) => d.count >= minConfirmations);
+
+      for (const drift of eligibleDrifts) {
+        if (options.webhookUrl) {
+          sendWebhookNotification(options.webhookUrl, drift).catch(() => {});
+        }
         if (onDrift) {
           try {
             onDrift(drift);
@@ -103,8 +114,8 @@ export function createShapewatch(options: ShapewatchOptions = {}): Shapewatch {
         }
       }
 
-      if (mode === 'strict' && recordedDrifts.length > 0) {
-        throw new ShapewatchDriftError(recordedDrifts);
+      if (mode === 'strict' && eligibleDrifts.length > 0) {
+        throw new ShapewatchDriftError(eligibleDrifts);
       }
 
       return recordedDrifts;
@@ -139,6 +150,22 @@ export function createShapewatch(options: ShapewatchOptions = {}): Shapewatch {
 
     axiosInterceptor(): (response: any) => any {
       return createAxiosInterceptor(instance, customNormalize);
+    },
+
+    generateTypeScript(endpoint: string, interfaceName: string = 'ApiResponse'): string {
+      const b = baselineManager.getBaseline(endpoint);
+      if (!b) {
+        throw new Error(`Baseline not found for endpoint: ${endpoint}`);
+      }
+      return generateTypeScriptTypes(b, interfaceName);
+    },
+
+    generateJsonSchema(endpoint: string): Record<string, unknown> {
+      const b = baselineManager.getBaseline(endpoint);
+      if (!b) {
+        throw new Error(`Baseline not found for endpoint: ${endpoint}`);
+      }
+      return generateJsonSchema(b);
     },
   };
 

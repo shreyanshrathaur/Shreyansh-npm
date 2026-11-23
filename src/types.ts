@@ -2,7 +2,8 @@ export type DriftKind =
   | 'FIELD_REMOVED'
   | 'TYPE_CHANGED'
   | 'UNEXPECTED_NULL'
-  | 'FIELD_ADDED';
+  | 'FIELD_ADDED'
+  | 'FORMAT_CHANGED';
 
 export type Severity = 'breaking' | 'warning' | 'info';
 
@@ -14,6 +15,7 @@ export interface FieldObservation {
   seen: number;
   typeCounts: Record<string, number>;
   nullCount: number;
+  format?: string;
 }
 
 export interface FieldStats {
@@ -26,6 +28,7 @@ export interface FieldStats {
   allowedTypes: string[];
   allowsNull: boolean;
   required: boolean;
+  format?: string;
 }
 
 export interface EndpointBaseline {
@@ -78,6 +81,8 @@ export interface ShapewatchOptions {
   requiredThreshold?: number;
   maxEndpoints?: number;
   maxDriftKeys?: number;
+  minDriftConfirmations?: number;
+  webhookUrl?: string;
   normalizeEndpoint?: (url: string, method?: string) => string;
   storage?: StorageAdapter;
   onDrift?: (drift: Drift) => void;
@@ -92,4 +97,6 @@ export interface Shapewatch {
   importBaseline(snapshot: Record<string, EndpointBaseline>): void;
   wrapFetch<F extends typeof fetch>(fetchImpl: F): F;
   axiosInterceptor(): (response: any) => any;
+  generateTypeScript(endpoint: string, interfaceName?: string): string;
+  generateJsonSchema(endpoint: string): Record<string, unknown>;
 }
