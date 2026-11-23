@@ -85,5 +85,72 @@ describe('Branch Coverage Optimization Tests', () => {
     const corruptFile = path.join(tmpDir, 'baselines.json');
     fs.writeFileSync(corruptFile, '{invalid', 'utf-8');
     expect(fStorage.loadBaseline('GET /any')).toBeNull();
+
+    // Call save again to exercise ensureDir when dir exists
+    fStorage.saveBaseline('GET /second', {
+      endpoint: 'GET /second',
+      samples: 1,
+      fields: {},
+      frozen: true,
+      createdAt: '',
+      updatedAt: '',
+    });
+    expect(fStorage.loadBaseline('GET /second')).toBeDefined();
+  });
+
+  it('covers hash anchor and suppressed child paths in compare', async () => {
+    // Hash in relative URL
+    const { normalizeEndpoint } = await import('../src/normalize.js');
+    expect(normalizeEndpoint('/items/10#section')).toBe('GET /items/:id');
+
+    // Child suppression when parent required field is missing
+    const { compareObservation } = await import('../src/compare.js');
+    const baseline = {
+      endpoint: 'GET /nested',
+      samples: 1,
+      frozen: true,
+      createdAt: '',
+      updatedAt: '',
+      fields: {
+        '$': {
+          path: '$',
+          seen: 1,
+          eligible: 1,
+          presentRatio: 1,
+          typeCounts: { object: 1 },
+          nullCount: 0,
+          allowedTypes: ['object'],
+          allowsNull: false,
+          required: true,
+        },
+        '$.parent': {
+          path: '$.parent',
+          seen: 1,
+          eligible: 1,
+          presentRatio: 1,
+          typeCounts: { object: 1 },
+          nullCount: 0,
+          allowedTypes: ['object'],
+          allowsNull: false,
+          required: true,
+        },
+        '$.parent.child': {
+          path: '$.parent.child',
+          seen: 1,
+          eligible: 1,
+          presentRatio: 1,
+          typeCounts: { string: 1 },
+          nullCount: 0,
+          allowedTypes: ['string'],
+          allowsNull: false,
+          required: true,
+        },
+      },
+    };
+
+    // Missing $.parent should report $.parent removed and suppress $.parent.child
+    const drifts = compareObservation('GET /nested', baseline as any, {});
+    expect(drifts).toHaveLength(1);
+    expect(drifts[0]?.path).toBe('$.parent');
   });
 });
