@@ -1,5 +1,5 @@
 {
-  "name": "@shreyansh/shapewatch",
+  "name": "@shreyanshrathaur/shapewatch",
   "version": "0.1.0",
   "description": "Zero-dependency runtime API response shape drift detection",
   "type": "module",
@@ -7,7 +7,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "shapewatch": "./dist/cli.js"
+    "shapewatch": "dist/cli.js"
   },
   "exports": {
     ".": {
